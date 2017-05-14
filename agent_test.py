@@ -21,5 +21,7 @@ class IsolationTest(unittest.TestCase):
         self.game = isolation.Board(self.player1, self.player2)
 
 
+
+
 if __name__ == '__main__':
     unittest.main()
