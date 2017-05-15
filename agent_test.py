@@ -18,11 +18,14 @@ class IsolationTest(unittest.TestCase):
 
     def setUp(self):
         reload(game_agent)
-        self.player1 = game_agent.MinimaxPlayer()
-        self.player2 = sample_players.RandomPlayer()
-        self.game = isolation.Board(self.player1, self.player2)
-        self.time_millis = lambda: 1000 * timeit.default_timer()
+        self.minimax_player = game_agent.MinimaxPlayer()
+        self.alphabeta_player = game_agent.AlphaBetaPlayer()
+        self.random_player = sample_players.RandomPlayer()
 
+        self.game = isolation.Board(self.minimax_player, self.random_player)
+        self.alphabeta_game = isolation.Board(self.alphabeta_player, self.random_player)
+
+        self.time_millis = lambda: 1000 * timeit.default_timer()
 
     def test_gives_valid_move(self):
         test_start = self.time_millis()
@@ -30,15 +33,17 @@ class IsolationTest(unittest.TestCase):
         # limit - miliseconds from start
         time_left = lambda: 10000 - (self.time_millis() - test_start)
 
-        self.assertIn(self.player1.get_move(self.game, time_left),
-                      self.game.get_legal_moves(self.player1))
+        self.assertIn(self.minimax_player.get_move(self.game, time_left),
+                      self.game.get_legal_moves(self.minimax_player))
 
+    def test_alphabeta_valid(self):
+        test_start = self.time_millis()
 
-    def test_visits_levels(self):
-        self.fail("Mot Implemented")
+        # limit - miliseconds from start
+        time_left = lambda: 10000 - (self.time_millis() - test_start)
 
-    def test_visits_nodes(self):
-        self.fail("Not implemented")
+        self.assertIn(self.alphabeta_player.get_move(self.alphabeta_game, time_left),
+                      self.alphabeta_game.get_legal_moves(self.alphabeta_player))
 
 
 if __name__ == '__main__':
