@@ -1,39 +1,24 @@
-"""Implement your own custom search agent using any combination of techniques
-you choose.  This agent will compete against other students (and past
-champions) in a tournament.
-
-         COMPLETING AND SUBMITTING A COMPETITION AGENT IS OPTIONAL
-"""
 import random
+import itertools
+
+from isolation import Board
+from game_agent import AlphaBetaPlayer
+from sample_players import improved_score
 
 
 class SearchTimeout(Exception):
-    """Subclass base exception for code clarity. """
     pass
 
 
 def custom_score(game, player):
-    """Calculate the heuristic value of a game state from the point of view
-    of the given player.
+    if game.is_loser(player):
+        return float("-inf")
+    if game.is_winner(player):
+        return float("inf")
 
-    This should be the best heuristic function for your project submission.
-
-    Parameters
-    ----------
-    game : `isolation.Board`
-        An instance of `isolation.Board` encoding the current state of the
-        game (e.g., player locations and blocked cells).
-
-    player : object
-        A player instance in the current game (i.e., an object corresponding to
-        one of the player objects `game.__player_1__` or `game.__player_2__`.)
-
-    Returns
-    -------
-    float
-        The heuristic value of the current game state to the specified player.
-    """
-    raise NotImplementedError
+    own_moves = game.get_legal_moves(player)
+    opp_moves = game.get_legal_moves(game.get_opponent(player))
+    return float(len(own_moves) - len(opp_moves))
 
 
 class CustomPlayer:
@@ -70,12 +55,6 @@ class CustomPlayer:
         """Search for the best move from the available legal moves and return a
         result before the time limit expires.
 
-        **********************************************************************
-        NOTE: If time_left < 0 when this function returns, the agent will
-              forfeit the game due to timeout. You must return _before_ the
-              timer reaches 0.
-        **********************************************************************
-
         Parameters
         ----------
         game : `isolation.Board`
@@ -93,5 +72,99 @@ class CustomPlayer:
             Board coordinates corresponding to a legal move; may return
             (-1, -1) if there are no available legal moves.
         """
-        # OPTIONAL: Finish this function!
-        raise NotImplementedError
+        self.time_left = time_left
+        best_move = (-1, -1)
+
+        try:
+            for depth in itertools.count(1):
+                best_move = self.alphabeta(game, depth, float("-inf"), float("inf"))
+        except SearchTimeout:
+            pass
+
+        return best_move
+
+    def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
+        """
+        Searches for the best move using minimax and alphabeta pruning with 
+        iterative deepening until the depth provided in the args.
+
+        Parameters
+        ----------
+        game : isolation.Board
+            An instance of the Isolation game `Board` class representing the
+            current game state
+
+        depth : int
+            Depth is an integer representing the maximum number of plies to
+            search in the game tree before aborting
+
+        alpha : float
+            Alpha limits the lower bound of search on minimizing layers
+
+        beta : float
+            Beta limits the upper bound of search on maximizing layers
+
+        Returns
+        -------
+        (int, int)
+            The board coordinates of the best move found in the current search;
+            (-1, -1) if there are no legal moves
+        """
+        if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
+
+        legal_moves = game.get_legal_moves(self)
+        best_move = legal_moves[0] if legal_moves else (-1, -1)
+        best_score = float("-inf")
+
+        for move in legal_moves:
+            score = self.min_play(game.forecast_move(move), depth - 1, alpha, beta)
+
+            if score > best_score:
+                best_score = score
+                best_move = move
+
+            alpha = max(alpha, best_score)
+
+        return best_move
+
+    def min_play(self, game, depth, alpha, beta):
+        if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
+
+        legal_moves = game.get_legal_moves()
+        value = float("inf")
+
+        if not legal_moves or depth == 0:
+            return self.score(game, self)
+
+        for move in legal_moves:
+            value = min(value, self.max_play(game.forecast_move(move), depth - 1, alpha, beta))
+            if value <= alpha: return value
+            beta = min(beta, value)
+
+        return value
+
+    def max_play(self, game, depth, alpha, beta):
+        if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
+
+        legal_moves = game.get_legal_moves()
+        value = float("-inf")
+
+        if not legal_moves or depth == 0:
+            return self.score(game, self)
+
+        for move in legal_moves:
+            value = max(value, self.min_play(game.forecast_move(move), depth - 1, alpha, beta))
+            if value >= beta: return value
+            alpha = max(alpha, value)
+
+        return value
+
+
+if __name__ == '__main__':
+    print("Custom vs Alphabeta")
+
+    alphabeta = AlphaBetaPlayer(score_fn=improved_score)
+    custom = CustomPlayer()
+
+    board = Board(alphabeta, custom)
+    print(board.play(time_limit=1000))

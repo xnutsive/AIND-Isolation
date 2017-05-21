@@ -48,6 +48,5 @@ class IsolationTest(unittest.TestCase):
         self.assertIn(alphabeta.get_move(board, time_left),
                       board.get_legal_moves(alphabeta))
 
-
 if __name__ == '__main__':
     unittest.main()

@@ -42,7 +42,7 @@ def custom_score(game, player):
     own_moves = game.get_legal_moves(player)
     opp_moves = game.get_legal_moves(game.get_opponent(player))
 
-    return float(max(0, len(own_moves) - len(opp_moves)))
+    return float(len(own_moves) - len(opp_moves))
 
 
 def custom_score_2(game, player):
@@ -207,9 +207,12 @@ class MinimaxPlayer(IsolationPlayer):
         """
         if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
 
-        return max(map(lambda m: (m, self.min_play(game.forecast_move(m), depth-1)),
-                       game.get_legal_moves(self)),
-                   key=lambda x: x[1])[0]
+        if game.get_legal_moves(self):
+            return max(map(lambda m: (m, self.min_play(game.forecast_move(m), depth-1)),
+                           game.get_legal_moves(self)),
+                       key=lambda x: x[1])[0]
+        else:
+            return (-1, -1)
 
     def min_play(self, game, depth):
         if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
@@ -260,7 +263,6 @@ class AlphaBetaPlayer(IsolationPlayer):
             (-1, -1) if there are no available legal moves.
         """
         self.time_left = time_left
-
         best_move = (-1, -1)
 
         try:
@@ -338,8 +340,6 @@ class AlphaBetaPlayer(IsolationPlayer):
         value = float("-inf")
 
         if not legal_moves or depth == 0:
-            score = self.score(game, self)
-
             return self.score(game, self)
 
         for move in legal_moves:
@@ -348,7 +348,3 @@ class AlphaBetaPlayer(IsolationPlayer):
             alpha = max(alpha, value)
 
         return value
-
-
-# if __name__ == '__main__':
-#     print("Game Agent Test")
