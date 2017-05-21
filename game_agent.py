@@ -1,5 +1,6 @@
 import itertools
-
+from isolation import Board
+from sample_players import RandomPlayer, open_move_score, improved_score
 
 class SearchTimeout(Exception):
     """Subclass base exception for code clarity. """
@@ -178,9 +179,11 @@ class MinimaxPlayer(IsolationPlayer):
         best_move = (-1, -1)
 
         try:
-            best_move = self.minimax(game, self.search_depth)
+            for depth in itertools.count(1):
+                best_move = self.minimax(game, depth)
         except SearchTimeout:
             pass
+
         return best_move
 
     def minimax(self, game, depth):
@@ -202,33 +205,14 @@ class MinimaxPlayer(IsolationPlayer):
             (-1, -1) if there are no legal moves
 
         """
-
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
+        if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
 
         return max(map(lambda m: (m, self.min_play(game.forecast_move(m), depth-1)),
                        game.get_legal_moves(self)),
                    key=lambda x: x[1])[0]
 
     def min_play(self, game, depth):
-        """
-        Parameters
-        ----------
-        game : isolation.Board
-            An instance of the Isolation game `Board` class representing the
-            current game state
-
-        depth : int
-            Depth is an integer representing the maximum number of plies to
-            search in the game tree before aborting
-
-        Returns
-        -------
-        int
-            Score of proposed board when minimizing.
-        """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
+        if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
 
         legal_moves = game.get_legal_moves()
 
@@ -238,24 +222,7 @@ class MinimaxPlayer(IsolationPlayer):
         return min(map(lambda m: self.max_play(game.forecast_move(m), depth-1), legal_moves))
 
     def max_play(self, game, depth):
-        """
-        Parameters
-        ----------
-        game : isolation.Board
-            An instance of the Isolation game `Board` class representing the
-            current game state
-
-        depth : int
-            Depth is an integer representing the maximum number of plies to
-            search in the game tree before aborting
-
-        Returns
-        -------
-        int
-            Score of proposed board when maximizing.
-        """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
+        if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
 
         legal_moves = game.get_legal_moves()
 
@@ -381,3 +348,7 @@ class AlphaBetaPlayer(IsolationPlayer):
             alpha = max(alpha, value)
 
         return value
+
+
+# if __name__ == '__main__':
+#     print("Game Agent Test")

@@ -4,46 +4,49 @@ cases used by the project assistant are not public.
 """
 
 import unittest
-
-import isolation
-import game_agent
-import sample_players
 import timeit
-
+import random
 from importlib import reload
+
+from isolation import Board
+from game_agent import AlphaBetaPlayer, MinimaxPlayer,\
+    custom_score, custom_score_2, custom_score_3
+from sample_players import RandomPlayer, GreedyPlayer, \
+    open_move_score, improved_score, center_score
 
 
 class IsolationTest(unittest.TestCase):
-    """Unit tests for isolation agents"""
 
     def setUp(self):
-        reload(game_agent)
-        self.minimax_player = game_agent.MinimaxPlayer()
-        self.alphabeta_player = game_agent.AlphaBetaPlayer()
-        self.random_player = sample_players.RandomPlayer()
-
-        self.game = isolation.Board(self.minimax_player, self.random_player)
-        self.alphabeta_game = isolation.Board(self.alphabeta_player, self.random_player)
-
         self.time_millis = lambda: 1000 * timeit.default_timer()
 
-    def test_gives_valid_move(self):
+    def test_minimax_valid(self):
         test_start = self.time_millis()
+        time_left = lambda: 1000 - (self.time_millis() - test_start)
 
-        # limit - miliseconds from start
-        time_left = lambda: 10000 - (self.time_millis() - test_start)
+        minimax = MinimaxPlayer()
+        board = Board(minimax, RandomPlayer())
 
-        self.assertIn(self.minimax_player.get_move(self.game, time_left),
-                      self.game.get_legal_moves(self.minimax_player))
+        # Play two moves to make legal moves array much smaller
+        board.apply_move(random.choice(board.get_legal_moves()))
+        board.apply_move(random.choice(board.get_legal_moves()))
+
+        self.assertIn(minimax.get_move(board, time_left),
+                      board.get_legal_moves(minimax))
 
     def test_alphabeta_valid(self):
         test_start = self.time_millis()
+        time_left = lambda: 1000 - (self.time_millis() - test_start)
 
-        # limit - miliseconds from start
-        time_left = lambda: 10000 - (self.time_millis() - test_start)
+        alphabeta = MinimaxPlayer()
+        board = Board(alphabeta, RandomPlayer())
 
-        self.assertIn(self.alphabeta_player.get_move(self.alphabeta_game, time_left),
-                      self.alphabeta_game.get_legal_moves(self.alphabeta_player))
+        # Play two moves to make legal moves array much smaller
+        board.apply_move(random.choice(board.get_legal_moves()))
+        board.apply_move(random.choice(board.get_legal_moves()))
+
+        self.assertIn(alphabeta.get_move(board, time_left),
+                      board.get_legal_moves(alphabeta))
 
 
 if __name__ == '__main__':
