@@ -50,71 +50,33 @@ class CustomPlayer:
         self.score = custom_score
         self.time_left = None
         self.TIMER_THRESHOLD = timeout
+        self.saved_games = dict()
 
     def get_move(self, game, time_left):
-        """Search for the best move from the available legal moves and return a
-        result before the time limit expires.
-
-        Parameters
-        ----------
-        game : `isolation.Board`
-            An instance of `isolation.Board` encoding the current state of the
-            game (e.g., player locations and blocked cells).
-
-        time_left : callable
-            A function that returns the number of milliseconds left in the
-            current turn. Returning with any less than 0 ms remaining forfeits
-            the game.
-
-        Returns
-        -------
-        (int, int)
-            Board coordinates corresponding to a legal move; may return
-            (-1, -1) if there are no available legal moves.
-        """
         self.time_left = time_left
         best_move = (-1, -1)
+
+        reached_depth = 0
 
         try:
             for depth in itertools.count(1):
                 best_move = self.alphabeta(game, depth, float("-inf"), float("inf"))
+                reached_depth = depth # save deepest search attempt that succeeded
+
+                print(str(game.move_count) + ", " + str(reached_depth) + ", " + str(len(self.saved_games.keys())))
         except SearchTimeout:
             pass
 
         return best_move
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
-        """
-        Searches for the best move using minimax and alphabeta pruning with 
-        iterative deepening until the depth provided in the args.
-
-        Parameters
-        ----------
-        game : isolation.Board
-            An instance of the Isolation game `Board` class representing the
-            current game state
-
-        depth : int
-            Depth is an integer representing the maximum number of plies to
-            search in the game tree before aborting
-
-        alpha : float
-            Alpha limits the lower bound of search on minimizing layers
-
-        beta : float
-            Beta limits the upper bound of search on maximizing layers
-
-        Returns
-        -------
-        (int, int)
-            The board coordinates of the best move found in the current search;
-            (-1, -1) if there are no legal moves
-        """
         if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
 
         legal_moves = game.get_legal_moves(self)
         best_move = legal_moves[0] if legal_moves else (-1, -1)
         best_score = float("-inf")
+
+        self.saved_games = dict()  # delete the old search scores
 
         for move in legal_moves:
             score = self.min_play(game.forecast_move(move), depth - 1, alpha, beta)
@@ -134,7 +96,9 @@ class CustomPlayer:
         value = float("inf")
 
         if not legal_moves or depth == 0:
-            return self.score(game, self)
+            score = self.score(game, self)
+            self.saved_games[game.__hash__()] = score
+            return score
 
         for move in legal_moves:
             value = min(value, self.max_play(game.forecast_move(move), depth - 1, alpha, beta))
@@ -150,7 +114,9 @@ class CustomPlayer:
         value = float("-inf")
 
         if not legal_moves or depth == 0:
-            return self.score(game, self)
+            score = self.score(game, self)
+            self.saved_games[game.__hash__()] = score
+            return score
 
         for move in legal_moves:
             value = max(value, self.min_play(game.forecast_move(move), depth - 1, alpha, beta))
