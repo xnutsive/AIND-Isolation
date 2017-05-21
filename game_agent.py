@@ -41,11 +41,7 @@ def custom_score(game, player):
     own_moves = game.get_legal_moves(player)
     opp_moves = game.get_legal_moves(game.get_opponent(player))
 
-    spaces = [space for space in game.get_blank_spaces() if
-              utils.distance_squared(space,
-                                     game.get_player_location(game.get_opponent(player))) > 18 and space in own_moves]
-
-    return float(max(0, len(own_moves) + len(spaces) - len(opp_moves)))
+    return float(max(0, len(own_moves) - len(opp_moves)))
 
 
 def custom_score_2(game, player):
@@ -335,8 +331,7 @@ class AlphaBetaPlayer(IsolationPlayer):
             The board coordinates of the best move found in the current search;
             (-1, -1) if there are no legal moves
         """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
+        if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
 
         legal_moves = game.get_legal_moves(self)
         best_move = legal_moves[0] if legal_moves else (-1, -1)
@@ -354,8 +349,7 @@ class AlphaBetaPlayer(IsolationPlayer):
         return best_move
 
     def min_play(self, game, depth, alpha, beta):
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
+        if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
 
         legal_moves = game.get_legal_moves()
         value = float("inf")
@@ -365,30 +359,25 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         for move in legal_moves:
             value = min(value, self.max_play(game.forecast_move(move), depth-1, alpha, beta))
-
-            if value <= alpha:
-                return value
-
+            if value <= alpha: return value
             beta = min(beta, value)
 
         return value
 
     def max_play(self, game, depth, alpha, beta):
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
+        if self.time_left() < self.TIMER_THRESHOLD: raise SearchTimeout()
 
         legal_moves = game.get_legal_moves()
         value = float("-inf")
 
         if not legal_moves or depth == 0:
+            score = self.score(game, self)
+
             return self.score(game, self)
 
         for move in legal_moves:
             value = max(value, self.min_play(game.forecast_move(move), depth-1, alpha, beta))
-
-            if value >= beta:
-                return value
-
+            if value >= beta: return value
             alpha = max(alpha, value)
 
         return value
