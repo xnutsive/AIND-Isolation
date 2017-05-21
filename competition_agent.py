@@ -21,6 +21,17 @@ def custom_score(game, player):
     return float(len(own_moves) - len(opp_moves))
 
 
+def get_board_clockwise_rotation(game):
+    rotated = game.copy()
+
+    for j in range(game.height):
+        for i in range(game.height):
+            rotated._board_state[(game.height-1-j) + i*game.height] = \
+                game._board_state[j*game.height + i]
+
+    return rotated
+
+
 class CustomPlayer:
     """Game-playing agent to use in the optional player vs player Isolation
     competition.
@@ -51,6 +62,7 @@ class CustomPlayer:
         self.time_left = None
         self.TIMER_THRESHOLD = timeout
         self.saved_games = dict()
+        self.reached_nodes = 0
 
     def get_move(self, game, time_left):
         self.time_left = time_left
@@ -61,9 +73,10 @@ class CustomPlayer:
         try:
             for depth in itertools.count(1):
                 best_move = self.alphabeta(game, depth, float("-inf"), float("inf"))
-                reached_depth = depth # save deepest search attempt that succeeded
+                reached_depth = depth  # save deepest search attempt that succeeded
 
-                print(str(game.move_count) + ", " + str(reached_depth) + ", " + str(len(self.saved_games.keys())))
+                # print("Move: " + str(game.move_count) + ", depth: " + str(reached_depth) +
+                #      ", saved states " + str(len(self.saved_games)) + ", nodes: " + str(self.reached_nodes))
         except SearchTimeout:
             pass
 
@@ -77,6 +90,7 @@ class CustomPlayer:
         best_score = float("-inf")
 
         self.saved_games = dict()  # delete the old search scores
+        self.reached_nodes = 0
 
         for move in legal_moves:
             score = self.min_play(game.forecast_move(move), depth - 1, alpha, beta)
@@ -96,8 +110,21 @@ class CustomPlayer:
         value = float("inf")
 
         if not legal_moves or depth == 0:
+            # Check if we have this board's score handy and return if we do
+            if game.hash() in self.saved_games: return self.saved_games[game.hash()]
+
+            # Approximate the score
             score = self.score(game, self)
-            self.saved_games[game.__hash__()] = score
+
+            # Save the calculated score for all the rotated boards
+
+            self.saved_games[game.hash()] = score
+            self.reached_nodes += 1
+            rotated = game
+            for i in range(3):
+                rotated = get_board_clockwise_rotation(rotated)
+                self.saved_games[rotated.hash()] = score
+
             return score
 
         for move in legal_moves:
@@ -114,8 +141,22 @@ class CustomPlayer:
         value = float("-inf")
 
         if not legal_moves or depth == 0:
+
+            # Check if we have this board's score handy and return if we do
+            if game.hash() in self.saved_games: return self.saved_games[game.hash()]
+
+            # Approximate the score
             score = self.score(game, self)
-            self.saved_games[game.__hash__()] = score
+
+            # Save the calculated score for all the rotated boards
+
+            self.saved_games[game.hash()] = score
+            self.reached_nodes += 1
+            rotated = game
+            for i in range(3):
+                rotated = get_board_clockwise_rotation(rotated)
+                self.saved_games[rotated.hash()] = score
+
             return score
 
         for move in legal_moves:
@@ -129,8 +170,9 @@ class CustomPlayer:
 if __name__ == '__main__':
     print("Custom vs Alphabeta")
 
-    alphabeta = AlphaBetaPlayer(score_fn=improved_score)
-    custom = CustomPlayer()
+    for i in range(10):
+        alphabeta = AlphaBetaPlayer(score_fn=improved_score)
+        custom = CustomPlayer()
 
-    board = Board(alphabeta, custom)
-    print(board.play(time_limit=1000))
+        board = Board(alphabeta, custom)
+        print(board.play(time_limit=1000)[0])

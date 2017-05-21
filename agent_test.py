@@ -38,7 +38,7 @@ class IsolationTest(unittest.TestCase):
         test_start = self.time_millis()
         time_left = lambda: 1000 - (self.time_millis() - test_start)
 
-        alphabeta = MinimaxPlayer()
+        alphabeta = AlphaBetaPlayer()
         board = Board(alphabeta, RandomPlayer())
 
         # Play two moves to make legal moves array much smaller
@@ -47,6 +47,18 @@ class IsolationTest(unittest.TestCase):
 
         self.assertIn(alphabeta.get_move(board, time_left),
                       board.get_legal_moves(alphabeta))
+
+    def test_hash_different(self):
+        board = Board(AlphaBetaPlayer(), RandomPlayer())
+
+        board.apply_move(random.choice(board.get_legal_moves()))
+        board.apply_move(random.choice(board.get_legal_moves()))
+
+        b1 = board.forecast_move(board.get_legal_moves()[0])
+        b2 = board.forecast_move(board.get_legal_moves()[1])
+
+        self.assertNotEqual(b1.__hash__(), b2.__hash__())
+
 
 if __name__ == '__main__':
     unittest.main()
