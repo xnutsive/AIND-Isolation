@@ -1,33 +1,4 @@
-"""Finish all TODO items in this file to complete the isolation project, then
-test your agent's strength against a set of known agents using tournament.py
-and include the results in your report.
-"""
-import random
 import itertools
-
-# May 14th TODO
-#
-# 1. [x] Implement basic depth-limited minimax algorithm with a verbose option for debugging.
-#       - Also show how many nodes has been discovered on each level.
-#
-# 2. [x] Make sure my implementation does not jump out of time allowed via checking time_left() on each
-#    depth level
-#
-# 3. Implement Alphabeta with minimax
-#
-# 4. [x] Implement Iterative deepening (re-watch the lecture to pass the exam)
-#       with depth limit and without depth limit.
-#
-# 5. Try 3 different heuristics (+2) and pass the assignment
-#
-# 6. Read AlphaGo paper and write the overview. At this state, I can pass the project
-#
-# 7. Implement tree reordering (heaptree will work for organizing based on leaf values from the previous
-#       tree and alpha-beta reuse). Measure how much this will affect the calculation.
-#
-# 8. Check if I can store the tree data between moves and reuse some data.
-#       Root level should be dropped and then maybe we can only add d+1 level if deep limited.
-#
 
 
 class SearchTimeout(Exception):
@@ -117,7 +88,6 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
     raise NotImplementedError
 
 
@@ -358,10 +328,6 @@ class AlphaBetaPlayer(IsolationPlayer):
             alpha = max(alpha, best_score)
 
         return best_move
-
-        # return max(map(lambda m: (m, self.min_play(game.forecast_move(m), depth-1, alpha, beta)),
-        #               game.get_legal_moves(self)),
-        #           key=lambda x: x[1])[0]
 
     def min_play(self, game, depth, alpha, beta):
         if self.time_left() < self.TIMER_THRESHOLD:
