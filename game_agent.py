@@ -348,3 +348,7 @@ class AlphaBetaPlayer(IsolationPlayer):
             alpha = max(alpha, value)
 
         return value
+
+
+if __name__ == '__main__':
+    print("Please run this via tournament.py instead.")

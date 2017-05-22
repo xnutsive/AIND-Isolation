@@ -110,22 +110,7 @@ class CustomPlayer:
         value = float("inf")
 
         if not legal_moves or depth == 0:
-            # Check if we have this board's score handy and return if we do
-            if game.hash() in self.saved_games: return self.saved_games[game.hash()]
-
-            # Approximate the score
-            score = self.score(game, self)
-
-            # Save the calculated score for all the rotated boards
-
-            self.saved_games[game.hash()] = score
-            self.reached_nodes += 1
-            rotated = game
-            for i in range(3):
-                rotated = get_board_clockwise_rotation(rotated)
-                self.saved_games[rotated.hash()] = score
-
-            return score
+            return self.calculate_game(game)
 
         for move in legal_moves:
             value = min(value, self.max_play(game.forecast_move(move), depth - 1, alpha, beta))
@@ -141,23 +126,7 @@ class CustomPlayer:
         value = float("-inf")
 
         if not legal_moves or depth == 0:
-
-            # Check if we have this board's score handy and return if we do
-            if game.hash() in self.saved_games: return self.saved_games[game.hash()]
-
-            # Approximate the score
-            score = self.score(game, self)
-
-            # Save the calculated score for all the rotated boards
-
-            self.saved_games[game.hash()] = score
-            self.reached_nodes += 1
-            rotated = game
-            for i in range(3):
-                rotated = get_board_clockwise_rotation(rotated)
-                self.saved_games[rotated.hash()] = score
-
-            return score
+            return self.calculate_game(game)
 
         for move in legal_moves:
             value = max(value, self.min_play(game.forecast_move(move), depth - 1, alpha, beta))
@@ -165,6 +134,26 @@ class CustomPlayer:
             alpha = max(alpha, value)
 
         return value
+
+    def calculate_game(self, game):
+        # Check if we have this board's score handy and return if we do
+        if game.hash() in self.saved_games:
+            return self.saved_games[game.hash()]
+
+        # Approximate the score
+        score = self.score(game, self)
+
+        # Save the calculated score for all the rotated boards
+        self.saved_games[game.hash()] = score
+        self.reached_nodes += 1
+
+
+        rotated = game
+        for i in range(3):
+            rotated = get_board_clockwise_rotation(rotated)
+            self.saved_games[rotated.hash()] = score
+
+        return score
 
 
 if __name__ == '__main__':
